@@ -52,17 +52,6 @@ public final class PicasaService extends Service {
     private static final AtomicBoolean sSyncPending = new AtomicBoolean(false);
 
     public static void requestSync(Context context, int type, long id) {
-        Bundle extras = new Bundle();
-        extras.putInt(KEY_TYPE, type);
-        extras.putLong(KEY_ID, id);
-
-        Account[] accounts = PicasaApi.getAccounts(context);
-        for (Account account : accounts) {
-            ContentResolver.requestSync(account, PicasaContentProvider.AUTHORITY, extras);
-        }
-
-        // context.startService(new Intent(context,
-        // PicasaService.class).putExtras(extras));
     }
 
     public PicasaService() {
@@ -185,17 +174,6 @@ public final class PicasaService extends Service {
     }
 
     private static boolean getIsSyncable(Context context, Account account) throws IOException, OperationCanceledException {
-        try {
-            Account[] picasaAccounts = AccountManager.get(context).getAccountsByTypeAndFeatures(ACCOUNT_TYPE,
-                    new String[] { FEATURE_SERVICE_NAME }, null /* callback */, null /* handler */).getResult();
-            for (Account picasaAccount : picasaAccounts) {
-                if (account.equals(picasaAccount)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (AuthenticatorException e) {
-            throw new IOException(e.getMessage());
-        }
+        return false;
     }
 }

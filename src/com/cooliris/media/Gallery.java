@@ -144,7 +144,6 @@ public final class Gallery extends Activity {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case GET_PICASA_ACCOUNT_STATUS:
-                        mAccountsEnabled = PicasaDataSource.getAccountStatus(Gallery.this);
                         break;
                     case UPDATE_PICASA_ACCOUNT_STATUS:
                         updatePicasaAccountStatus();
@@ -217,17 +216,6 @@ public final class Gallery extends Activity {
     }
 
     void updatePicasaAccountStatus() {
-        // We check to see if the authenticated accounts have
-        // changed, if so, reload the datasource.
-
-        // TODO: This should be done in PicasaDataFeed
-        if (mGridLayer != null) {
-            HashMap<String, Boolean> accountsEnabled = PicasaDataSource.getAccountStatus(this);
-            if (!accountsEnabled.equals(mAccountsEnabled)) {
-                mGridLayer.setDataSource(mGridLayer.getDataSource());
-                mAccountsEnabled = accountsEnabled;
-            }
-        }
     }
 
     @Override

@@ -77,61 +77,8 @@ public final class PicasaApi {
         }
     }
 
-    public static Account[] getAccounts(Context context) {
-        // Return the list of accounts supporting the Picasa GData service.
-        AccountManager accountManager = AccountManager.get(context);
-        Account[] accounts = {};
-        try {
-            accounts = accountManager.getAccountsByTypeAndFeatures(PicasaService.ACCOUNT_TYPE,
-                    new String[] { PicasaService.FEATURE_SERVICE_NAME }, null, null).getResult();
-        } catch (OperationCanceledException e) {
-        } catch (AuthenticatorException e) {
-        } catch (IOException e) {
-        } catch (Exception e) {
-            ;
-        }
-        return accounts;
-    }
-
     public static AuthAccount[] getAuthenticatedAccounts(Context context) {
-        AccountManager accountManager = AccountManager.get(context);
-        Account[] accounts = getAccounts(context);
-        if (accounts == null)
-            accounts = new Account[0];
-        int numAccounts = accounts.length;
-
-        ArrayList<AuthAccount> authAccounts = new ArrayList<AuthAccount>(numAccounts);
-        for (int i = 0; i != numAccounts; ++i) {
-            Account account = accounts[i];
-            String authToken;
-            try {
-                // Get the token without user interaction.
-                authToken = accountManager.blockingGetAuthToken(account, PicasaService.SERVICE_NAME, true);
-
-                // TODO: Remove this once the build is signed by Google, since
-                // we will always have permission.
-                // This code requests permission from the user explicitly.
-                if (context instanceof Activity) {
-                    Bundle bundle = accountManager.getAuthToken(account, PicasaService.SERVICE_NAME, null, (Activity) context,
-                            null, null).getResult();
-                    authToken = bundle.getString("authtoken");
-                    PicasaService.requestSync(context, PicasaService.TYPE_USERS_ALBUMS, -1);
-                }
-
-                // Add the account information to the list of accounts.
-                if (authToken != null) {
-                    String username = canonicalizeUsername(account.name);
-                    authAccounts.add(new AuthAccount(username, authToken, account));
-                }
-            } catch (OperationCanceledException e) {
-            } catch (IOException e) {
-            } catch (AuthenticatorException e) {
-            } catch (Exception e) {
-                ;
-            }
-        }
-        AuthAccount[] authArray = new AuthAccount[authAccounts.size()];
-        authAccounts.toArray(authArray);
+        AuthAccount[] authArray = new AuthAccount[1];
         return authArray;
     }
 

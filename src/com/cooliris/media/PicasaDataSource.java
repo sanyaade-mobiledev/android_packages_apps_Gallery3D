@@ -53,19 +53,6 @@ public final class PicasaDataSource implements DataSource {
         mContext = context;
     }
 
-    public static final HashMap<String, Boolean> getAccountStatus(final Context context) {
-        final Account[] accounts = PicasaApi.getAccounts(context);
-        int numAccounts = accounts.length;
-        HashMap<String, Boolean> accountsEnabled = new HashMap<String, Boolean>(numAccounts);
-        for (int i = 0; i < numAccounts; ++i) {
-            Account account = accounts[i];
-            boolean isEnabled = ContentResolver.getSyncAutomatically(account, PicasaContentProvider.AUTHORITY);
-            String username = PicasaApi.canonicalizeUsername(account.name);
-            accountsEnabled.put(username, new Boolean(isEnabled));
-        }
-        return accountsEnabled;
-    }
-
     public void loadMediaSets(final MediaFeed feed) {
         // We do this here and not in the constructor to speed application
         // loading time since this method is called in a background thread
@@ -93,45 +80,6 @@ public final class PicasaDataSource implements DataSource {
     }
 
     protected void loadMediaSetsIntoFeed(final MediaFeed feed, boolean sync) {
-        final HashMap<String, Boolean> accountsEnabled = getAccountStatus(mContext);
-        final ContentProviderClient client = mProviderClient;
-        if (client == null)
-            return;
-        try {
-            final EntrySchema albumSchema = AlbumEntry.SCHEMA;
-            final Cursor cursor = client.query(PicasaContentProvider.ALBUMS_URI, albumSchema.getProjection(), null, null,
-                    DEFAULT_BUCKET_SORT_ORDER);
-            final AlbumEntry album = new AlbumEntry();
-            MediaSet mediaSet;
-            if (cursor.moveToFirst()) {
-                final int numAlbums = cursor.getCount();
-                final ArrayList<MediaSet> picasaSets = new ArrayList<MediaSet>(numAlbums);
-                do {
-                    albumSchema.cursorToObject(cursor, album);
-                    String userLowerCase = album.syncAccount.toLowerCase();
-                    final Boolean accountEnabledObj = accountsEnabled.get(userLowerCase);
-                    final boolean accountEnabled = (accountEnabledObj == null) ? false : accountEnabledObj.booleanValue();
-                    if (accountEnabled) {
-                        mediaSet = feed.getMediaSet(album.id);
-                        if (mediaSet == null) {
-                            mediaSet = feed.addMediaSet(album.id, this);
-                            mediaSet.mName = album.title;
-                            mediaSet.mEditUri = album.editUri;
-                            mediaSet.generateTitle(true);
-                        } else {
-                            mediaSet.setNumExpectedItems(album.numPhotos);
-                        }
-                        mediaSet.mPicasaAlbumId = album.id;
-                        mediaSet.mIsLocal = false;
-                        mediaSet.mSyncPending = album.photosDirty;
-                        picasaSets.add(mediaSet);
-                    }
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-        } catch (RemoteException e) {
-            Log.e(TAG, "Error occurred loading albums");
-        }
     }
 
     private void addItemsToFeed(MediaFeed feed, MediaSet set, int start, int end) {
